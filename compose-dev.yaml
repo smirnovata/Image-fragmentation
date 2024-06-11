@@ -1,0 +1,42 @@
+services:
+  postgres:
+    image: postgres:latest
+    environment:
+        - POSTGRES_USER=postgres
+        - POSTGRES_PASSWORD=admin
+    ports:
+        - 15432:5432
+
+  ho:
+    restart: always
+    privileged: true
+    image: ru-tasm-image-fragmentation/handmade-orchestrator:v1
+    environment:
+      - PG_SERVER=postgres
+      - PG_PORT=5432
+      - PG_USERNAME=postgres
+      - PG_PASSWORD=admin
+      - PS_URL=http://pyser:5000
+      - HO_FOLDER_PATH=/usr/tmp/data/
+    ports:
+        - 18080:8080
+    volumes:
+         - tmp-data:/usr/tmp/data/
+    depends_on:
+        - postgres
+        - pyser
+
+  pyser:
+    restart: always
+    privileged: true
+    image: ru-tasm-image-fragmentation/python-server:v1
+    environment:
+      - FILES_FOLDER=/usr/tmp/data/
+      - HO_SERVER=ho:8080
+      - PYSER_DEBUG=False
+    volumes:
+         - tmp-data:/usr/tmp/data/
+
+volumes:
+  tmp-data:
+    external: false
